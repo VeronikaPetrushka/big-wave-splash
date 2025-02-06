@@ -54,35 +54,37 @@ const OnBoarding = () => {
                 </View>
             }
 
-            {
-                componentIndex === 0 ? (
-                    <Image source={require('../assets/onboarding/title/1.png')} style={styles.title} />
-                ) : (
-                    componentIndex === 1 ? (
-                        <Image source={require('../assets/onboarding/title/2.png')} style={styles.title} />
+            <View style={{width: '100%', alignItems: 'center'}}>
+                {
+                    componentIndex === 0 ? (
+                        <Image source={require('../assets/onboarding/title/1.png')} style={styles.title} />
                     ) : (
-                        <Image source={require('../assets/onboarding/title/3.png')} style={styles.title} />
+                        componentIndex === 1 ? (
+                            <Image source={require('../assets/onboarding/title/2.png')} style={styles.title} />
+                        ) : (
+                            <Image source={require('../assets/onboarding/title/3.png')} style={styles.title} />
+                        )
                     )
-                )
-            }
+                }
 
-            <View style={styles.infoContainer}>
+                <View style={styles.infoContainer}>
 
-                <Text style={styles.text}>
-                    {componentIndex === 2
-                        ? 'Try to direct the splash so that it hits the target!' 
-                        : 'Get ready for an exciting water splash game!'
-                        }
-                </Text>
+                    <Text style={styles.text}>
+                        {componentIndex === 2
+                            ? 'Try to direct the splash so that it hits the target!' 
+                            : 'Get ready for an exciting water splash game!'
+                            }
+                    </Text>
 
-                <TouchableOpacity style={styles.btn} onPress={handleButtonPress}>
-                    <Text style={styles.btnText}>{
-                        componentIndex === 0 ? 'Next' : 
-                        componentIndex === 1 ? 'Continue' :
-                        'Start the game!'
-                    }</Text>
-                </TouchableOpacity>
+                    <TouchableOpacity style={styles.btn} onPress={handleButtonPress}>
+                        <Text style={styles.btnText}>{
+                            componentIndex === 0 ? 'Next' : 
+                            componentIndex === 1 ? 'Continue' :
+                            'Start the game!'
+                        }</Text>
+                    </TouchableOpacity>
 
+                </View>
             </View>
 
         </LinearGradient>
@@ -93,6 +95,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         alignItems: 'center',
+        justifyContent: 'space-between',
     },
 
     image: {
@@ -104,6 +107,7 @@ const styles = StyleSheet.create({
     infoContainer: {
         width: '100%',
         paddingHorizontal: 35,
+        paddingBottom: 35
     },
 
     title: {

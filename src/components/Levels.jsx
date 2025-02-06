@@ -1,4 +1,3 @@
-// styles + buttons
 import { ImageBackground, StyleSheet, View, Image, Text, TouchableOpacity, Dimensions, ScrollView } from "react-native"
 import { useNavigation } from "@react-navigation/native";
 import microbes from "../constants/microbes";
@@ -17,8 +16,13 @@ const Levels = () => {
             <ScrollView contentContainerStyle={{width: '100%', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between'}}>
                 {
                     microbes.map((item, index) => (
-                        <View key={index} style={{width: '50%', alignItems: 'flex-start'}}>
-                            <TouchableOpacity style={styles.card}>
+                        <View key={index}  style={{
+                            width: '50%',
+                            alignItems: 'flex-start',
+                            ...(item.level === '5' ? { marginLeft: 100 } : {}),
+                          }}
+                          >
+                            <View style={styles.card}>
                                 {
                                     item.level === '1' && (
                                         <Image source={require('../assets/decor/levels/1.png')} style={{width: 30, height: 105, resizeMode: 'contain'}} />
@@ -47,7 +51,7 @@ const Levels = () => {
                                 <View style={[styles.diffContainer, item.level === '5' && {backgroundColor: '#fc5b01', width: 170}]}>
                                     <Text style={styles.diff}>{item.complexity}</Text>
                                 </View>
-                            </TouchableOpacity>    
+                            </View>    
                         </View>
                     ))
                 }

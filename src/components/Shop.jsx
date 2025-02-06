@@ -1,11 +1,56 @@
-// logic
-import { ImageBackground, StyleSheet, View, Image, Text, TouchableOpacity, Dimensions, ScrollView } from "react-native"
+import React, { useEffect, useState } from 'react';
+import { ImageBackground, StyleSheet, View, Image, Text, TouchableOpacity, Dimensions, ScrollView, Alert } from "react-native"
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from "@react-navigation/native";
 
 const { height } = Dimensions.get('window');
 
 const Shop = () => {
     const navigation = useNavigation();
+    const [balance, setBalance] = useState(0);
+    const [increasedPowerPurchased, setIncreasedPowerPurchased] = useState(false);
+    const [endlessWaterPurchased, setEndlessWaterPurchased] = useState(false);
+  
+    useEffect(() => {
+      loadData();
+    }, []);
+  
+    const loadData = async () => {
+      try {
+        const storedBalance = await AsyncStorage.getItem('awards');
+        setBalance(storedBalance ? parseInt(storedBalance, 10) : 0);
+  
+        const powerStatus = await AsyncStorage.getItem('increasedPower');
+        const waterStatus = await AsyncStorage.getItem('endlessWater');
+  
+        setIncreasedPowerPurchased(powerStatus === 'true');
+        setEndlessWaterPurchased(waterStatus === 'true');
+      } catch (error) {
+        console.error("Error loading data:", error);
+      }
+    };
+  
+    const handlePurchase = async (price, itemKey) => {
+      if (balance < price) {
+        Alert.alert("Not Enough Points", "You don't have enough points for this purchase.");
+        return;
+      }
+  
+      try {
+        const updatedBalance = balance - price;
+        await AsyncStorage.setItem('awards', String(updatedBalance));
+        await AsyncStorage.setItem(itemKey, 'true');
+        setBalance(updatedBalance);
+  
+        if (itemKey === 'increasedPower') setIncreasedPowerPurchased(true);
+        if (itemKey === 'endlessWater') setEndlessWaterPurchased(true);
+  
+        Alert.alert("Purchase Successful", `You have successfully purchased ${itemKey.replace(/([A-Z])/g, ' $1')}.`);
+      } catch (error) {
+        console.error("Error processing purchase:", error);
+      }
+    };
+  
 
     return (
         <ImageBackground source={require('../assets/back/1.png')} style={{flex: 1}}>
@@ -14,7 +59,8 @@ const Shop = () => {
             <Image source={require('../assets/decor/shop-title.png')} style={styles.title} />
 
             <View style={styles.balanceContainer}>
-                <Text style={styles.balance}>250</Text>
+                <Text style={styles.balance}>{balance}</Text>
+                <Image source={require('../assets/decor/balance.png')} style={{width: 37, height: 37, marginLeft: 10}} />
             </View>
 
             <ScrollView style={{width: '100%'}}>
@@ -28,10 +74,11 @@ const Shop = () => {
                         <Image source={require('../assets/decor/shop/1.png')} style={{width: 110, height: 46, resizeMode: 'contain'}} />
                     </View>
                     <TouchableOpacity 
-                        style={styles.btn}
-                        onPress={''}
+                        style={[styles.btn, { backgroundColor: balance >= 2300 ? '#faf600' : '#d3d3d3' }]}
+                        onPress={() => handlePurchase(2300, 'increasedPower')}
+                        disabled={balance < 2300}
                         >
-                        <Text style={styles.btnText}>Exchange</Text>
+                        <Text style={styles.btnText}>{increasedPowerPurchased ? 'Applied' : 'Exchange'}</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -44,10 +91,11 @@ const Shop = () => {
                         <Image source={require('../assets/decor/shop/2.png')} style={{width: 130, height: 46, resizeMode: 'contain'}} />
                     </View>
                     <TouchableOpacity 
-                        style={styles.btn}
-                        onPress={''}
+                        style={[styles.btn, { backgroundColor: balance >= 25000 ? '#faf600' : '#d3d3d3' }]}
+                        onPress={() => handlePurchase(25000, 'endlessWater')}
+                        disabled={balance < 25000}
                         >
-                        <Text style={styles.btnText}>Exchange</Text>
+                        <Text style={styles.btnText}>{endlessWaterPurchased ? 'Applied' : 'Exchange'}</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -88,7 +136,9 @@ const styles = StyleSheet.create({
         borderRadius: 7,
         borderWidth: 5,
         borderColor: '#84d2fe',
-        marginBottom: 32
+        marginBottom: 32,
+        flexDirection: 'row',
+        alignItems: 'center'
     },
 
     balance: {

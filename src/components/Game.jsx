@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ImageBackground, StyleSheet, View, Image, Text, TouchableOpacity, Dimensions, Animated } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from "@react-navigation/native";
 import microbes from "../constants/microbes";
 
@@ -14,6 +15,24 @@ const Game = () => {
   const position = new Animated.ValueXY({ x: width * 0.3, y: height * 0.4 });
   const [timeLeft, setTimeLeft] = useState(20);
   const [gameOver, setGameOver] = useState(false);
+  const [powerStatus, setPowerStatus] = useState(false);
+
+  useEffect(() => {
+    const fetchPowerStatus = async () => {
+      try {
+        const powerData = await AsyncStorage.getItem('increasedPower');
+        setPowerStatus(powerData === 'true');
+      } catch (error) {
+        console.error("Error retrieving increasedPower status:", error);
+      }
+    };
+
+    fetchPowerStatus();
+  }, []);
+
+  useEffect(() => {
+    checkCompletionFlag();
+  }, []);  
 
   useEffect(() => {
     let timer;
@@ -24,7 +43,8 @@ const Game = () => {
     }
     return () => clearTimeout(timer);
   }, [timeLeft, health]);
-    
+  
+  
   useEffect(() => {
     const moveMicrobe = () => {
       Animated.timing(position, {
@@ -51,7 +71,7 @@ const Game = () => {
   };
 
   const handleMicrobePress = () => {
-    setHealth((prevHealth) => Math.max(prevHealth - 10, 0));
+    setHealth((prevHealth) => Math.max(prevHealth - (powerStatus ? 30 : 10), 0));
   };
 
   const formatTime = (seconds) => {
@@ -60,6 +80,59 @@ const Game = () => {
     return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
   };
 
+  const saveAward = async (award) => {
+    try {
+      const existingAwards = await AsyncStorage.getItem('awards');
+      const currentTotal = existingAwards ? parseInt(existingAwards, 10) : 0;
+      const updatedTotal = currentTotal + award;
+      await AsyncStorage.setItem('awards', String(updatedTotal));
+    } catch (error) {
+      console.error("Error saving award:", error);
+    }
+  };  
+
+  useEffect(() => {
+    if (health === 0 && gameOver) {
+      const award = async () => {
+        await saveAward(microbe.award);
+      };
+      award();
+    }
+  }, [health, gameOver]);
+
+  const storeCompletionFlag = async () => {
+    try {
+      const expirationTime = new Date().getTime() + 24 * 60 * 60 * 1000;
+      const flagData = JSON.stringify({ award: 'completed', expirationTime });
+      await AsyncStorage.setItem('microbeCompletionFlag', flagData);
+    } catch (error) {
+      console.error("Error storing completion flag:", error);
+    }
+  };
+  
+  const checkCompletionFlag = async () => {
+    try {
+      const flagData = await AsyncStorage.getItem('microbeCompletionFlag');
+      if (flagData) {
+        const { expirationTime } = JSON.parse(flagData);
+        if (new Date().getTime() > expirationTime) {
+          await AsyncStorage.removeItem('microbeCompletionFlag');
+        }
+      }
+    } catch (error) {
+      console.error("Error checking completion flag:", error);
+    }
+  };  
+
+  useEffect(() => {
+    if (health === 0 && microbeIndex === 0) {
+      const handleAwardCompletion = async () => {
+        await storeCompletionFlag();
+      };
+      handleAwardCompletion();
+    }
+  }, [health, microbeIndex]);  
+  
   const handleTryAgain = () => {
     setTimeLeft(20);
     setHealth(microbe.health);
@@ -80,20 +153,72 @@ const Game = () => {
     }
   };
 
+  const handleRestartGame = () => {
+    setMicrobeIndex(0);
+    setMicrobe(microbes[0]);
+    setHealth(microbes[0].health);
+    setTimeLeft(20);
+    setGameOver(false);
+  };
+
   if (gameOver) {
     return (
       <ImageBackground source={microbe.background} style={{ flex: 1 }}>
         <View style={styles.container}>
-          <Text style={[styles.text, { fontSize: 22, marginBottom: 20 }]}>Game Over!</Text>
-          <Text style={[styles.text, { fontSize: 18, marginBottom: 20 }]}>Final Health: {health}</Text>
-          {health === 0 ? (
-            <TouchableOpacity style={styles.btn} onPress={handleNextLevel}>
-              <Text style={styles.btnText}>Next Level</Text>
-            </TouchableOpacity>
+          {health > 0 ? (
+            <View style={{width: '100%', alignItems: 'center'}}>
+                <Image source={require('../assets/game/gameover-title.png')} style={styles.title} />
+                <View style={styles.finishContainer}>
+                <Text style={[styles.finishLevel, {marginTop: height * 0.066}]}>Level {microbe.level}</Text>
+                <Text style={[styles.finishLevel, {marginBottom: 12}]}>not passed</Text>
+                <Text style={styles.finishText}>Time is up</Text>
+                <TouchableOpacity style={styles.btn} onPress={handleTryAgain}>
+                        <Text style={styles.btnText}>Try Again</Text>
+                    </TouchableOpacity>
+                <TouchableOpacity style={styles.homeBtn} onPress={() => navigation.goBack('')}>
+                    <Text style={styles.homeBtnText}>BACK HOME</Text>
+                </TouchableOpacity>
+                <Image source={require('../assets/game/man.png')} style={styles.man} />
+            </View>
+            </View>
           ) : (
-            <TouchableOpacity style={styles.btn} onPress={handleTryAgain}>
-                <Text style={styles.btnText}>Try Again</Text>
-            </TouchableOpacity>
+            <View style={{width: '100%', alignItems: 'center'}}>
+                <Image source={require('../assets/game/success-title.png')} style={styles.title} />
+                <View style={styles.finishContainer}>
+                    <View style={[styles.successMicrobeContainer, {marginTop: 30}]}>
+                        <Image source={microbe.image} style={{width: 150, height: 140, resizeMode: 'contain'}} />
+                    </View>
+                    <Text style={styles.finishLevel}>Level {microbe.level}!</Text>
+                    <View style={{width: '80%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: height * 0.032}}>
+                        <Text style={[styles.finishText, {marginBottom: 0}]}>Award:</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <Text style={[styles.finishText, {marginBottom: 0}]}>{microbe.award}</Text>
+                          <Image source={require('../assets/decor/balance.png')} style={{width: 30, height: 30, marginLeft: 10}} />
+                        </View>
+                    </View>
+                    {
+                        microbe.level === '5' && (
+                            <Text style={[styles.finishText, {marginBottom: height * 0.04, textAlign: 'center', fontSize: 16, lineHeight: 26, marginTop: -20}]}>The end is over, all microbes have learned the damage! You can start a new game</Text>
+                        )
+                    }
+                    {
+                        microbe.level === '5' ? (
+                            <TouchableOpacity style={styles.btn} onPress={handleRestartGame}>
+                                <Text style={styles.btnText}>START OVER AGAIN!</Text>
+                            </TouchableOpacity>
+                        ) : (
+                            <TouchableOpacity style={styles.btn} onPress={handleNextLevel}>
+                                <Text style={styles.btnText}>Next Level</Text>
+                            </TouchableOpacity>    
+                        )
+                    }
+                    <TouchableOpacity style={styles.homeBtn} onPress={() => navigation.goBack('')}>
+                        <Text style={styles.homeBtnText}>BACK HOME</Text>
+                    </TouchableOpacity>
+                    <Image source={require('../assets/game/fish.png')} style={styles.fish} />
+                    <Image source={require('../assets/game/man.png')} style={styles.man} />
+                </View>
+            </View>
           )}
         </View>
       </ImageBackground>
@@ -123,7 +248,7 @@ const Game = () => {
                 <View>
                     <Image source={microbe.image} style={styles.microbe} />
                     <View style={styles.healthBar}>
-                        <View style={[styles.healthFill, { width: `${(health / microbe.health) * 130}` }]} />
+                        <View style={[styles.healthFill, { width: `${(health / microbe.health) * 70}` }]} />
                     </View>
                 </View>
             </TouchableOpacity>
@@ -193,17 +318,20 @@ const styles = StyleSheet.create({
   },
 
   healthBar: {
-    height: 10,
-    backgroundColor: '#ddd',
-    width: 130,
-    borderRadius: 5,
+    height: 19,
+    backgroundColor: '#fff',
+    width: 70,
+    borderRadius: 12,
     marginTop: 5,
+    borderWidth: 1,
+    borderColor: '#494d55',
+    overflow: 'hidden'
   },
 
   healthFill: {
     height: '100%',
     backgroundColor: '#32CD32',
-    borderRadius: 5,
+    borderRadius: 12,
   },
 
   btn: {
@@ -217,14 +345,88 @@ const styles = StyleSheet.create({
     shadowOffset: { width: -4, height: 4 },
     shadowOpacity: 1,
     shadowRadius: 0,
-    marginBottom: 15
+    marginBottom: 5
     },
 
     btnText: {
         fontWeight: '900',
         fontSize: 24,
         color: '#000',
+        textAlign: 'center'
     },
+
+    finishContainer: {
+        width: '90%', 
+        alignItems: 'center',
+        borderRadius: 30,
+        backgroundColor: '#fff',
+        marginBottom: 24,
+        borderWidth: 5,
+        borderColor: '#84d2fe',
+        padding: 23,
+        paddingBottom: 0,
+        alignItems: 'center',
+        marginTop: -30
+    },
+
+    finishLevel: {
+        fontSize: 36,
+        fontWeight: '800',
+        color: '#242136',
+        lineHeight: 59,   
+    },
+
+    finishText: {
+        fontSize: 20,
+        fontWeight: '800',
+        color: '#494d55',
+        lineHeight: 32.76,
+        marginBottom: height * 0.066
+    },
+
+    man: {
+        width: 150,
+        height: 286,
+        resizeMode: 'contain',
+        position: 'absolute',
+        right: -43,
+        top: -20,
+        zIndex: 13
+    },
+
+    fish: {
+        width: 100,
+        height: 141,
+        resizeMode: 'contain',
+        position: 'absolute',
+        left: -43,
+        top: 30,
+        zIndex: 13
+    },
+
+    successMicrobeContainer: {
+        width: '100%',
+        borderRadius: 17,
+        backgroundColor: '#84d2fe',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 20,
+        padding: 20
+    },
+
+    homeBtn: {
+        width: '100%',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 20
+    },
+
+    homeBtnText: {
+        fontWeight: '900',
+        fontSize: 20,
+        color: '#565656',
+        lineHeight: 32.76
+    }
 
 
 });
