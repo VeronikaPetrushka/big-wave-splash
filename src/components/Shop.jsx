@@ -1,3 +1,4 @@
+// logic
 import { ImageBackground, StyleSheet, View, Image, Text, TouchableOpacity, Dimensions, ScrollView } from "react-native"
 import { useNavigation } from "@react-navigation/native";
 

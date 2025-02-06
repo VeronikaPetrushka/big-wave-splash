@@ -7,7 +7,9 @@ const microbes = [
         health: '100',
         deactivate: '15',
         vulnerability: 'No',
-        teleportation: 'No'
+        teleportation: 'No',
+        background: require('../assets/game/back/1.png'),
+        levelTitle: require('../assets/game/levels/1.png')
     },
     {
         name: 'Gregory',
@@ -17,7 +19,9 @@ const microbes = [
         health: '500',
         deactivate: '20',
         vulnerability: 'Afraid of prolonged watering',
-        teleportation: 'Yes'
+        teleportation: 'Yes',
+        background: require('../assets/game/back/2.png'),
+        levelTitle: require('../assets/game/levels/2.png')
     },
     {
         name: 'Samuel',
@@ -27,7 +31,9 @@ const microbes = [
         health: '750',
         deactivate: '15',
         vulnerability: 'Afraid of prolonged watering',
-        teleportation: 'Yes'
+        teleportation: 'Yes',
+        background: require('../assets/game/back/3.png'),
+        levelTitle: require('../assets/game/levels/3.png')
     },
     {
         name: 'Walker',
@@ -37,7 +43,9 @@ const microbes = [
         health: '1500',
         deactivate: '20',
         vulnerability: 'Afraid of prolonged watering',
-        teleportation: 'Yes'
+        teleportation: 'Yes',
+        background: require('../assets/game/back/4.png'),
+        levelTitle: require('../assets/game/levels/4.png')
     },
     {
         name: 'Rowter',
@@ -47,7 +55,9 @@ const microbes = [
         health: '5000',
         deactivate: '15',
         vulnerability: 'No',
-        teleportation: 'Yes'
+        teleportation: 'Yes',
+        background: require('../assets/game/back/5.png'),
+        levelTitle: require('../assets/game/levels/5.png')
     },
 ];
 

@@ -9,6 +9,7 @@ import MicrobeDetailsScreen from './src/screens/MicrobeDetailsScreen';
 import LevelsScreen from './src/screens/LevelsScreen';
 import ShopScreen from './src/screens/ShopScreen';
 import DailyScreen from './src/screens/DailyScreen';
+import GameScreen from './src/screens/GameScreen';
 
 enableScreens();
 
@@ -52,6 +53,11 @@ const App = () => {
                   <Stack.Screen 
                         name="DailyScreen" 
                         component={DailyScreen} 
+                        options={{ headerShown: false }} 
+                  />
+                  <Stack.Screen 
+                        name="GameScreen" 
+                        component={GameScreen} 
                         options={{ headerShown: false }} 
                   />
             </Stack.Navigator>
