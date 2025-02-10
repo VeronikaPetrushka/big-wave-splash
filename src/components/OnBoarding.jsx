@@ -1,6 +1,5 @@
 import React, { useState } from "react"
-import { View, Text,TouchableOpacity, Image, StyleSheet, Dimensions } from "react-native"
-import LinearGradient from 'react-native-linear-gradient';
+import { View, Text,TouchableOpacity, Image, StyleSheet, Dimensions, ImageBackground } from "react-native"
 import { useNavigation } from "@react-navigation/native";
 
 const { height } = Dimensions.get('window');
@@ -19,12 +18,7 @@ const OnBoarding = () => {
     };
 
     return (
-        <LinearGradient
-            colors={['#1de0d0', '#1d1568']}
-            style={styles.container}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-        >
+        <ImageBackground source={require('../assets/back/1.png')} style={styles.container}>
 
             {
                 componentIndex === 0 && 
@@ -87,7 +81,7 @@ const OnBoarding = () => {
                 </View>
             </View>
 
-        </LinearGradient>
+        </ImageBackground>
     )
 };
 
